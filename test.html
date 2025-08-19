@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雪球插件状态测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 雪球爬虫插件状态测试</h1>
+        
+        <div class="test-section">
+            <h3>📋 测试说明</h3>
+            <p>这个页面帮助测试Chrome插件的状态持久化功能：</p>
+            <ol>
+                <li>在雪球网站开启爬虫</li>
+                <li>切换到其他tab后再回来</li>
+                <li>检查状态是否保持一致</li>
+                <li>测试多tab之间的状态同步</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 当前状态检查</h3>
+            <button onclick="checkExtensionStatus()">检查插件状态</button>
+            <button onclick="checkStorageState()">检查存储状态</button>
+            <button onclick="clearStorageState()">清除存储状态</button>
+            <div id="statusDisplay" class="status warning">
+                点击按钮检查状态...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 状态测试工具</h3>
+            <button onclick="simulateCrawlerState(true)">模拟爬虫启动</button>
+            <button onclick="simulateCrawlerState(false)">模拟爬虫停止</button>
+            <button onclick="addTestData()">添加测试数据</button>
+            <button onclick="checkTabSync()">检查Tab同步</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 状态数据</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <strong>运行状态:</strong> <span id="runningStatus">-</span><br>
+                    <strong>数据条数:</strong> <span id="dataCount">-</span><br>
+                    <strong>当前页面:</strong> <span id="currentPage">-</span>
+                </div>
+                <div>
+                    <strong>最后更新:</strong> <span id="lastUpdate">-</span><br>
+                    <strong>状态有效性:</strong> <span id="stateValidity">-</span><br>
+                    <strong>Tab ID:</strong> <span id="tabId">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 操作日志</h3>
+            <button onclick="clearLog()">清除日志</button>
+            <div id="logDisplay" class="log">
+                等待操作...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logContainer = document.getElementById('logDisplay');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.style.color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#333';
+            entry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLog() {
+            logContainer.innerHTML = '日志已清除';
+        }
+
+        async function checkExtensionStatus() {
+            log('检查插件状态...');
+            try {
+                // 这里只是模拟，实际需要通过Chrome Extension API
+                log('⚠️ 这是测试页面，需要在雪球网站上测试真实功能', 'warning');
+                updateStatusDisplay('测试模式 - 请在雪球网站测试', 'warning');
+            } catch (error) {
+                log(`检查失败: ${error.message}`, 'error');
+                updateStatusDisplay('检查失败', 'error');
+            }
+        }
+
+        async function checkStorageState() {
+            log('检查Chrome存储状态...');
+            try {
+                if (typeof chrome !== 'undefined' && chrome.storage) {
+                    const result = await chrome.storage.local.get(['crawlerState']);
+                    if (result.crawlerState) {
+                        const state = result.crawlerState;
+                        updateStateDisplay(state);
+                        log('✅ 成功读取存储状态', 'success');
+                        updateStatusDisplay('存储状态已读取', 'success');
+                    } else {
+                        log('⚠️ 未找到存储状态', 'warning');
+                        updateStatusDisplay('未找到存储状态', 'warning');
+                    }
+                } else {
+                    log('⚠️ Chrome存储API不可用', 'warning');
+                    updateStatusDisplay('Chrome API不可用', 'warning');
+                }
+            } catch (error) {
+                log(`读取存储失败: ${error.message}`, 'error');
+                updateStatusDisplay('读取失败', 'error');
+            }
+        }
+
+        async function clearStorageState() {
+            log('清除存储状态...');
+            try {
+                if (typeof chrome !== 'undefined' && chrome.storage) {
+                    await chrome.storage.local.remove(['crawlerState']);
+                    log('✅ 存储状态已清除', 'success');
+                    updateStatusDisplay('存储状态已清除', 'success');
+                    clearStateDisplay();
+                } else {
+                    log('⚠️ Chrome存储API不可用', 'warning');
+                }
+            } catch (error) {
+                log(`清除失败: ${error.message}`, 'error');
+                updateStatusDisplay('清除失败', 'error');
+            }
+        }
+
+        async function simulateCrawlerState(running) {
+            log(`模拟爬虫${running ? '启动' : '停止'}...`);
+            try {
+                if (typeof chrome !== 'undefined' && chrome.storage) {
+                    const state = {
+                        isRunning: running,
+                        collectedData: running ? [
+                            { id: 1, content: '测试数据1', time: Date.now() },
+                            { id: 2, content: '测试数据2', time: Date.now() }
+                        ] : [],
+                        currentPage: running ? 1 : 0,
+                        lastUpdate: Date.now()
+                    };
+                    
+                    await chrome.storage.local.set({ crawlerState: state });
+                    updateStateDisplay(state);
+                    log(`✅ 爬虫状态设置为: ${running ? '运行中' : '已停止'}`, 'success');
+                    updateStatusDisplay(`模拟状态: ${running ? '运行中' : '已停止'}`, 'success');
+                } else {
+                    log('⚠️ Chrome存储API不可用', 'warning');
+                }
+            } catch (error) {
+                log(`模拟失败: ${error.message}`, 'error');
+                updateStatusDisplay('模拟失败', 'error');
+            }
+        }
+
+        async function addTestData() {
+            log('添加测试数据...');
+            try {
+                if (typeof chrome !== 'undefined' && chrome.storage) {
+                    const result = await chrome.storage.local.get(['crawlerState']);
+                    let state = result.crawlerState || {
+                        isRunning: false,
+                        collectedData: [],
+                        currentPage: 0,
+                        lastUpdate: Date.now()
+                    };
+                    
+                    state.collectedData.push({
+                        id: Date.now(),
+                        content: `测试数据 ${state.collectedData.length + 1}`,
+                        time: Date.now()
+                    });
+                    state.lastUpdate = Date.now();
+                    
+                    await chrome.storage.local.set({ crawlerState: state });
+                    updateStateDisplay(state);
+                    log(`✅ 添加测试数据，总计: ${state.collectedData.length}条`, 'success');
+                    updateStatusDisplay('测试数据已添加', 'success');
+                } else {
+                    log('⚠️ Chrome存储API不可用', 'warning');
+                }
+            } catch (error) {
+                log(`添加数据失败: ${error.message}`, 'error');
+                updateStatusDisplay('添加数据失败', 'error');
+            }
+        }
+
+        async function checkTabSync() {
+            log('检查Tab同步功能...');
+            updateStatusDisplay('请在雪球网站多个tab中测试', 'warning');
+            log('ℹ️ Tab同步功能需要在雪球网站的多个标签页中测试');
+            log('1. 在第一个tab启动爬虫');
+            log('2. 打开新的雪球tab');
+            log('3. 检查新tab中插件状态是否同步');
+        }
+
+        function updateStatusDisplay(message, type) {
+            const statusDiv = document.getElementById('statusDisplay');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function updateStateDisplay(state) {
+            document.getElementById('runningStatus').textContent = state.isRunning ? '运行中' : '已停止';
+            document.getElementById('dataCount').textContent = state.collectedData ? state.collectedData.length : 0;
+            document.getElementById('currentPage').textContent = state.currentPage || 0;
+            
+            const lastUpdate = new Date(state.lastUpdate);
+            document.getElementById('lastUpdate').textContent = lastUpdate.toLocaleString();
+            
+            const now = Date.now();
+            const isValid = (now - state.lastUpdate) < 5 * 60 * 1000;
+            document.getElementById('stateValidity').textContent = isValid ? '有效' : '已过期';
+            document.getElementById('stateValidity').style.color = isValid ? '#28a745' : '#dc3545';
+        }
+
+        function clearStateDisplay() {
+            document.getElementById('runningStatus').textContent = '-';
+            document.getElementById('dataCount').textContent = '-';
+            document.getElementById('currentPage').textContent = '-';
+            document.getElementById('lastUpdate').textContent = '-';
+            document.getElementById('stateValidity').textContent = '-';
+            document.getElementById('stateValidity').style.color = '#333';
+        }
+
+        // 页面加载时的初始化
+        window.addEventListener('load', () => {
+            log('🚀 状态测试页面已加载');
+            log('请在雪球网站 (xueqiu.com) 上测试真实功能');
+            
+            // 尝试获取当前tab信息
+            if (typeof chrome !== 'undefined' && chrome.tabs) {
+                chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                    if (tabs[0]) {
+                        document.getElementById('tabId').textContent = tabs[0].id;
+                    }
+                });
+            }
+        });
+
+        // 监听存储变化
+        if (typeof chrome !== 'undefined' && chrome.storage) {
+            chrome.storage.onChanged.addListener((changes, namespace) => {
+                if (changes.crawlerState) {
+                    log('🔄 检测到存储状态变化');
+                    if (changes.crawlerState.newValue) {
+                        updateStateDisplay(changes.crawlerState.newValue);
+                    } else {
+                        clearStateDisplay();
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
