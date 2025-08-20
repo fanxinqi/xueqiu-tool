@@ -184,7 +184,7 @@ class XueqiuCrawler {
 
     try {
       // 首先点击timeline tab的第二个a标签
-      await this.clickTimelineTab();
+    //   await this.clickTimelineTab();
 
       // 开始爬取循环
       await this.crawlLoop();
